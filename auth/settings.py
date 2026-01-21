@@ -10,22 +10,25 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
 
+# Use environment value; fallback to False
+DEBUG = os.getenv('DEBUG', 'False').lower() in ('1', 'true', 'yes')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+# SECRET_KEY from env; fallback to a development placeholder (change for prod)
+SECRET_KEY = os.getenv('SECRET_KEY') or 'django-insecure-change-me'
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-+z)%2z8r1xzx6+l5)^9z*1^#449lvp(4kuwvjt1jcf8wrsyszg'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS: permissive for local dev, strict when DEBUG is False
+if DEBUG:
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+else:
+    raw_hosts = os.getenv('ALLOWED_HOSTS', '')
+    ALLOWED_HOSTS = [h.strip() for h in raw_hosts.split(',') if h.strip()]
 
 
 # Application definition
@@ -87,19 +90,13 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
+VALIDATOR_BASE = 'django.contrib.auth.password_validation.'
+
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': VALIDATOR_BASE + 'UserAttributeSimilarityValidator'},
+    {'NAME': VALIDATOR_BASE + 'MinimumLengthValidator'},
+    {'NAME': VALIDATOR_BASE + 'CommonPasswordValidator'},
+    {'NAME': VALIDATOR_BASE + 'NumericPasswordValidator'},
 ]
 
 
@@ -123,10 +120,13 @@ STATIC_URL = 'static/'
 AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
-    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
