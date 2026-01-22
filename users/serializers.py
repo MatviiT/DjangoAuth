@@ -5,18 +5,26 @@ from .models import User
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email', 'name', 'is_staff', 'date_joined')
-        read_only_fields = ('id', 'is_staff', 'date_joined')
+        fields = ['email', 'name', 'is_active', 'is_staff', 'date_joined']
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
-
+class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('email', 'name', 'password')
+        fields = ['email', 'name', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User.objects.create_user(**validated_data, password=password)
+        user = User(
+            email=validated_data['email'],
+            name=validated_data['name']
+        )
+        user.set_password(validated_data['password'])
+        user.save()
         return user
+
+
+class UserTokenSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['email', 'password']

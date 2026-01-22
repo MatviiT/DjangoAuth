@@ -1,137 +1,114 @@
-# DjangoAuth
-# Django Auth API
+# DjangoAuth — REST API з JWT авторизацією
 
-REST API для аутентифікації користувачів з JWT токенами.
+## Опис
+
+Це бекенд на Django + Django REST Framework з кастомним User, JWT-авторизацією (SimpleJWT) та endpoint-ами для реєстрації, логіну, логауту й отримання інформації про користувача.
+
+---
+
+## Основні можливості
+
+- Реєстрація користувача: `/api/register/`
+- Логін (отримання JWT): `/api/login/`
+- Логаут (blacklist refresh-токена): `/api/logout/`
+- Отримання/оновлення JWT: `/api/token/`, `/api/token/refresh/`
+- Перегляд/редагування користувачів: `/api/users/`
+- Отримання своїх даних: `/api/users/me/`
+
+---
+
+## Швидкий старт
+
+1. **Клонувати репозиторій та встановити залежності**
+    ```bash
+    git clone <repo_url>
+    cd DjangoAuth
+    python3 -m venv venv
+    source venv/bin/activate
+    pip install -r requirements.txt
+    ```
+
+2. **Налаштувати .env**
+    ```
+    DEBUG=True
+    DB_NAME=djangoauth
+    DB_USER=postgres
+    DB_PASSWORD=yourpassword
+    DB_HOST=localhost
+    DB_PORT=5432
+    SECRET_KEY=your-secret-key
+    ```
+
+3. **Міграції та запуск**
+    ```bash
+    python3 manage.py migrate
+    python3 manage.py createsuperuser
+    python3 manage.py runserver
+    ```
+
+---
+
+## Використання API
+
+### Реєстрація
+`POST /api/register/`
+```json
+{
+  "email": "user@example.com",
+  "name": "User Name",
+  "password": "StrongPassword123"
+}
+```
+
+### Логін
+`POST /api/login/`
+```json
+{
+  "email": "user@example.com",
+  "password": "StrongPassword123"
+}
+```
+**Відповідь:**
+```json
+{
+  "refresh": "<refresh_token>",
+  "access": "<access_token>"
+}
+```
+
+### Логаут
+`POST /api/logout/`
+```json
+{
+  "refresh": "<refresh_token>"
+}
+```
+**Headers:**  
+`Authorization: Bearer <access_token>`
+
+### Отримати свої дані
+`GET /api/users/me/`  
+**Headers:**  
+`Authorization: Bearer <access_token>`
+
+---
 
 ## Технології
 
-- Python 3.13
-- Django 6.0
+- Django 4+
 - Django REST Framework
-- PyJWT
-- SQLite
+- SimpleJWT
+- PostgreSQL
 
-## Встановлення
+---
 
-```bash
-# Клонувати репозиторій
-git clone https://github.com/your-username/DjangoAuth.git
-cd DjangoAuth
+## Для фронтенду
 
-# Створити віртуальне середовище
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+- Авторизація через JWT (Bearer Token)
+- Всі відповіді — JSON
+- Для доступу до захищених endpoint-ів потрібен access-токен
 
-# Встановити залежності
-pip install -r requirements.txt
-
-# Застосувати міграції
-python manage.py migrate
-
-# Запустити сервер
-python manage.py runserver
-```
-
-## API Endpoints
-
-| Метод | URL | Опис |
-|-------|-----|------|
-| POST | `/api/register/` | Реєстрація нового користувача |
-| POST | `/api/login/` | Вхід (повертає JWT токен) |
-| GET | `/api/user/` | Отримати поточного користувача |
-| POST | `/api/logout/` | Вийти з системи |
-
-## Приклади запитів
-
-### Реєстрація
-
-```bash
-curl -X POST http://localhost:8000/api/register/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john",
-    "email": "john@example.com",
-    "password": "securepassword123"
-  }'
-```
-
-**Відповідь:**
-```json
-{
-  "id": 1,
-  "username": "john",
-  "email": "john@example.com"
-}
-```
-
-### Вхід
-
-```bash
-curl -X POST http://localhost:8000/api/login/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "password": "securepassword123"
-  }'
-```
-
-**Відповідь:**
-```json
-{
-  "jwt": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-}
-```
-
-### Отримати користувача
-
-```bash
-curl http://localhost:8000/api/user/ \
-  --cookie "jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-```
-
-**Відповідь:**
-```json
-{
-  "id": 1,
-  "username": "john",
-  "email": "john@example.com"
-}
-```
-
-## Структура проєкту
-
-```
-DjangoAuth/
-├── auth/                   # Налаштування Django
-│   ├── settings.py
-│   ├── urls.py
-│   └── wsgi.py
-├── users/                  # Додаток користувачів
-│   ├── models.py          # Кастомна модель User
-│   ├── serializers.py     # Серіалізатори DRF
-│   ├── views.py           # API views
-│   └── urls.py            # URL маршрути
-├── manage.py
-├── requirements.txt
-└── README.md
-```
-
-## Модель користувача
-
-Використовується кастомна модель `User` з аутентифікацією по email:
-
-```python
-class User(AbstractUser):
-    email = models.EmailField(unique=True)
-    
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username']
-```
-
-## Автор
-
-MatviiT
+---
 
 ## Ліцензія
 
